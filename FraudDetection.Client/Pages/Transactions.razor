@@ -1,0 +1,266 @@
+@page "/transactions"
+@using FraudDetection.Shared.DTOs
+@using FraudDetection.Client.Services
+@inject ServerFraudClient FraudClient
+
+<style>
+    :root {
+        --fintech-blue: #0ea5e9;
+        --fraud-red: #ef4444;
+        --safe-green: #10b981;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        padding: 2rem;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 2rem;
+    }
+
+    .v-input-grid {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 1.25rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .form-control-sm-custom {
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+    }
+
+    .result-card {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .shap-table-container {
+        max-height: 550px;
+        overflow-y: auto;
+    }
+
+    .risk-indicator-glow {
+        animation: pulse-glow 2s infinite;
+    }
+
+    @@keyframes pulse-glow {
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="page-header d-flex justify-content-between align-items-center shadow-sm">
+        <div>
+            <h2 class="fw-bold mb-1">Transaction Scoring & Explainability</h2>
+            <p class="mb-0 opacity-75">Full Model Diagnostics: XGBoost + SHAP</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @* LEFT COLUMN: FORM (3-COLUMN PARAMETER GRID) *@
+        <div class="col-xl-7">
+            <div class="card result-card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Input Parameters</h5>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-secondary" @onclick="FillLegit">Sample: Legit</button>
+                        <button class="btn btn-outline-danger" @onclick="FillFraud">Sample: Fraud</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="transaction" OnValidSubmit="OnScore">
+                        <div class="v-input-grid mb-4">
+                            <div class="row g-2">
+                                @* PCA Variables in 3 columns for better visibility *@
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V1</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V1" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V2</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V2" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V3</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V3" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V4</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V4" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V5</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V5" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V6</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V6" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V7</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V7" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V8</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V8" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V9</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V9" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V10</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V10" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V11</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V11" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V12</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V12" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V13</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V13" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V14</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V14" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V15</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V15" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V16</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V16" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V17</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V17" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V18</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V18" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V19</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V19" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V20</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V20" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V21</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V21" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V22</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V22" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V23</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V23" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V24</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V24" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V25</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V25" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V26</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V26" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V27</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V27" /></div></div>
+                                <div class="col-md-4 col-6"><div class="input-group input-group-sm"><span class="input-group-text">V28</span><InputNumber class="form-control form-control-sm-custom" @bind-Value="transaction.V28" /></div></div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Amount (Log)</label>
+                                <InputNumber class="form-control" @bind-Value="transaction.AmountLog" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Time (Hours)</label>
+                                <InputNumber class="form-control" @bind-Value="transaction.TimeHours" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Day of Week</label>
+                                <InputNumber class="form-control" @bind-Value="transaction.DayOfWeek" />
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top d-flex gap-2">
+                            <button class="btn btn-primary px-4" type="submit">Score Transaction</button>
+                            <button class="btn btn-info text-white px-4" type="button" @onclick="Explain">Explain (SHAP)</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        @* RIGHT COLUMN: RESULTS & SHAP *@
+        <div class="col-xl-5">
+            @* PREDICTION RESULT CARD *@
+            <div class="card result-card shadow-sm border-0 mb-4 @(result?.Prediction == 1 ? "risk-indicator-glow" : "")">
+                <div class="card-header @(result?.Prediction == 1 ? "bg-danger" : "bg-dark") text-white py-3">
+                    <h5 class="mb-0 fw-bold">Prediction Result</h5>
+                </div>
+                <div class="card-body">
+                    @if (result != null)
+                    {
+                        <div class="row text-center mb-3">
+                            <div class="col-6 border-end">
+                                <div class="small text-muted">PROBABILITY</div>
+                                <div class="h3 fw-bold @(result.Probability > result.Threshold ? "text-danger" : "text-success")">@result.Probability.ToString("P4")</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="small text-muted">PREDICTION</div>
+                                <div class="h3 fw-bold @(result.Prediction == 1 ? "text-danger" : "text-success")">@(result.Prediction == 1 ? "FRAUD" : "SAFE")</div>
+                            </div>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Optimized Threshold:</span>
+                                <span class="fw-bold">@result.Threshold.ToString("F4")</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Risk Level:</span>
+                                <span class="badge @GetRiskBadgeClass(result.RiskLevel) px-3 py-2">@result.RiskLevel</span>
+                            </div>
+                        </div>
+                    }
+                    else { <p class="text-muted text-center py-4">Click <b>Score</b> to see model output.</p> }
+                </div>
+            </div>
+
+            @* SHAP EXPLANATION CARD *@
+            <div class="card result-card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3 fw-bold text-info d-flex justify-content-between">
+                    <span>SHAP Contributions</span>
+                    @if(explain != null) { <span class="badge bg-secondary">Base: @explain.BaseValue.ToString("F4")</span> }
+                </div>
+                <div class="card-body p-0">
+                    <div class="shap-table-container">
+                        @if (explain != null && explain.ShapValues?.Length > 0)
+                        {
+                            
+                            <table class="table table-hover table-sm mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr class="small">
+                                        <th class="ps-3">Feature</th>
+                                        <th class="text-end pe-3">SHAP Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < explain.ShapValues.Length; i++)
+                                    {
+                                        var val = explain.ShapValues[i];
+                                        var name = i < 28 ? $"V{i + 1}" : (i == 28 ? "AmountLog" : i == 29 ? "TimeHours" : "DayOfWeek");
+                                        <tr>
+                                            <td class="ps-3 fw-bold text-secondary">@name</td>
+                                            <td class="text-end pe-3 font-monospace @(val > 0 ? "text-danger" : "text-success")">
+                                                @(val > 0 ? "+" : "")@val.ToString("F5")
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-dark">
+                                    <tr>
+                                        <td class="ps-3">Model Base Value (Intercept)</td>
+                                        <td class="text-end pe-3">@explain.BaseValue.ToString("F5")</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        }
+                        else { <p class="text-muted text-center py-5 mb-0">SHAP details will appear here.</p> }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private TransactionDto transaction = new();
+    private FraudResultDto? result;
+    private ExplainResultDto? explain;
+
+    private string GetRiskBadgeClass(string? riskLevel) => riskLevel switch
+    {
+        "HIGH" => "bg-danger",
+        "MEDIUM" => "bg-warning text-dark",
+        "LOW" => "bg-success",
+        _ => "bg-secondary"
+    };
+
+    private void FillLegit() {
+        SetAllVs(0.0);
+        transaction.AmountLog = 5.0; transaction.TimeHours = 12.5; transaction.DayOfWeek = 2;
+    }
+
+    private void FillFraud() {
+        double[] vals = { -1.3598,-0.0747,2.5363,1.0150,0.6414,0.0660,-0.0378,-0.1358,-0.9710,-0.9192,-1.0462,-0.4576,0.2060,0.0250,0.4015,0.5916,-0.5921,-0.2477,-0.6315,0.7530,-0.3282,0.4670,-0.2385,0.5678,0.7839,-0.2954,-0.6836,0.3056 };
+        transaction.V1 = vals[0]; transaction.V2 = vals[1]; transaction.V3 = vals[2]; transaction.V4 = vals[3];
+        transaction.V5 = vals[4]; transaction.V6 = vals[5]; transaction.V7 = vals[6]; transaction.V8 = vals[7];
+        transaction.V9 = vals[8]; transaction.V10 = vals[9]; transaction.V11 = vals[10]; transaction.V12 = vals[11];
+        transaction.V13 = vals[12]; transaction.V14 = vals[13]; transaction.V15 = vals[14]; transaction.V16 = vals[15];
+        transaction.V17 = vals[16]; transaction.V18 = vals[17]; transaction.V19 = vals[18]; transaction.V20 = vals[19];
+        transaction.V21 = vals[20]; transaction.V22 = vals[21]; transaction.V23 = vals[22]; transaction.V24 = vals[23];
+        transaction.V25 = vals[24]; transaction.V26 = vals[25]; transaction.V27 = vals[26]; transaction.V28 = vals[27];
+        transaction.AmountLog = 10.0; transaction.TimeHours = 3.0; transaction.DayOfWeek = 5;
+    }
+
+    private void SetAllVs(double val) {
+        transaction.V1 = transaction.V2 = transaction.V3 = transaction.V4 = transaction.V5 = 
+        transaction.V6 = transaction.V7 = transaction.V8 = transaction.V9 = transaction.V10 = 
+        transaction.V11 = transaction.V12 = transaction.V13 = transaction.V14 = transaction.V15 = 
+        transaction.V16 = transaction.V17 = transaction.V18 = transaction.V19 = transaction.V20 = 
+        transaction.V21 = transaction.V22 = transaction.V23 = transaction.V24 = transaction.V25 = 
+        transaction.V26 = transaction.V27 = transaction.V28 = val;
+    }
+
+    private async Task OnScore() {
+        result = await FraudClient.ScoreAsync(transaction);
+        StateHasChanged();
+    }
+
+    private async Task Explain() {
+        explain = await FraudClient.ExplainAsync(transaction);
+        StateHasChanged();
+    }
+}

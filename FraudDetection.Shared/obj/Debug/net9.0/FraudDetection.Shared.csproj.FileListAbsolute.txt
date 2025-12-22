@@ -1,0 +1,12 @@
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\bin\Debug\net9.0\FraudDetection.Shared.deps.json
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\bin\Debug\net9.0\FraudDetection.Shared.dll
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\bin\Debug\net9.0\FraudDetection.Shared.pdb
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\obj\Debug\net9.0\FraudDetection.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\obj\Debug\net9.0\FraudDetection.Shared.AssemblyInfoInputs.cache
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\obj\Debug\net9.0\FraudDetection.Shared.AssemblyInfo.cs
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\obj\Debug\net9.0\FraudDetection.Shared.csproj.CoreCompileInputs.cache
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\obj\Debug\net9.0\FraudDetection.Shared.sourcelink.json
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\obj\Debug\net9.0\FraudDetection.Shared.dll
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\obj\Debug\net9.0\refint\FraudDetection.Shared.dll
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\obj\Debug\net9.0\FraudDetection.Shared.pdb
+C:\Users\user\Desktop\machinelearning\CreditCard-FraudDetection\FraudDetection.Shared\obj\Debug\net9.0\ref\FraudDetection.Shared.dll

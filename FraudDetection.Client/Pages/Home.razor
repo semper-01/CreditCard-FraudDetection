@@ -1,0 +1,199 @@
+﻿@page "/"
+
+<PageTitle>Fraud Detection Dashboard</PageTitle>
+
+<style>
+    :root {
+        --primary-blue: #0062ff;
+        --dark-bg: #f8f9fa;
+        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Hero Banner with Overlay for Readability */
+    .hero-banner {
+        position: relative;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('creditCard.png');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 100px 20px;
+        border-radius: 15px;
+        margin-bottom: 50px;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Modern Card Styling */
+    .metric-card {
+        border: none;
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 24px;
+        box-shadow: var(--card-shadow);
+        background-color: #ffffff;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .metric-card h3 {
+        color: #1a1a1a;
+        font-weight: 700;
+        margin-bottom: 15px;
+        border-left: 4px solid var(--primary-blue);
+        padding-left: 15px;
+    }
+
+    .metric-card p {
+        color: #6c757d;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    /* Modal Styling - High Contrast for Images */
+    .modal-backdrop-custom {
+        background-color: rgba(15, 23, 42, 0.98) !important;
+        backdrop-filter: blur(8px);
+    }
+
+    .modal-image-container {
+        padding: 20px;
+        background: white; /* White background behind image to ensure visibility */
+        border-radius: 12px;
+        display: inline-block;
+    }
+
+    .modal-image {
+        max-width: 100%;
+        max-height: 80vh;
+        border-radius: 4px;
+        object-fit: contain;
+    }
+
+    .btn-view {
+        background-color: var(--primary-blue);
+        border: none;
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-view:hover {
+        background-color: #004ecc;
+        box-shadow: 0 4px 12px rgba(0, 98, 255, 0.3);
+    }
+</style>
+
+<div class="container py-4">
+    
+    <header class="hero-banner text-center">
+        <div class="container">
+            <h1 class="display-3 fw-bold mb-3">Fraud Detection System</h1>
+            <p class="lead mb-4">Harnessing XGBoost and MLOps for Real-Time Financial Security.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <span class="badge bg-light text-dark px-3 py-2">Optimal Threshold: 0.931</span>
+                <span class="badge bg-primary px-3 py-2">F1-Score: 0.811</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="metric-card">
+                <div>
+                    <h3>Confusion Matrix</h3>
+                    <p>Analyze the balance between False Alerts (FP) and Missed Fraud (FN). This matrix validates our <strong>0.931</strong> threshold optimization for business safety.</p>
+                </div>
+                <button class="btn btn-primary btn-view mt-3" @onclick='() => OpenModal("Confusion Matrix", "/confusion_matrix.png")'>
+                    Analyze Matrix
+                </button>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="metric-card">
+                <div>
+                    <h3>Feature Importance</h3>
+                    <p>SHAP value analysis identifies key drivers like <strong>V14</strong> and <strong>V10</strong>. This interpretability allows analysts to understand <em>why</em> a transaction was flagged.</p>
+                </div>
+                <button class="btn btn-primary btn-view mt-3" @onclick='() => OpenModal("Feature Importance (SHAP)", "/feature_importance.png")'>
+                    Explore Features
+                </button>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="metric-card">
+                <div>
+                    <h3>Performance Curves</h3>
+                    <p>ROC and Precision-Recall curves demonstrate the model's high discriminatory power, essential for handling severely imbalanced credit card datasets.</p>
+                </div>
+                <button class="btn btn-primary btn-view mt-3" @onclick='() => OpenModal("ROC & PR Curves", "/roc_pr_curves.png")'>
+                    View Curves
+                </button>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="metric-card">
+                <div>
+                    <h3>Threshold Sweep</h3>
+                    <p>A visual demonstration of the optimization process that successfully maximized the F1-Score from <strong>0.743</strong> to <strong>0.811</strong>.</p>
+                </div>
+                <button class="btn btn-primary btn-view mt-3" @onclick='() => OpenModal("Threshold Optimization Sweep", "/threshold_sweep.png")'>
+                    View Optimization
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isModalOpen)
+{
+    <div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" role="dialog" @onclick="CloseModal">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document" @onclick:stopPropagation> 
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-header border-0">
+                    <h4 class="modal-title text-white fw-bold">@modalTitle</h4>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseModal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-0">
+                    <div class="modal-image-container shadow-lg">
+                        <img src="@modalImageUrl" alt="@modalTitle" class="modal-image" />
+                    </div>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <p class="text-white-50 small">Click anywhere outside to close</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isModalOpen = false;
+    private string modalTitle = string.Empty;
+    private string modalImageUrl = string.Empty;
+
+    private void OpenModal(string title, string url)
+    {
+        modalTitle = title;
+        modalImageUrl = url;
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        modalTitle = string.Empty;
+        modalImageUrl = string.Empty;
+    }
+}
